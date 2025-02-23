@@ -99,8 +99,10 @@
 
         // Save DB file to IndexedDB
         var bytes = await File.ReadAllBytesAsync(fileName);
-        await IndexedDbService.StoreBytes(fileName, bytes, "1.0");
-        return bytes;
+        var compressedBytes = CompressionHelper.CompressGZip(bytes);
+
+        await IndexedDbService.StoreBytes(fileName, compressedBytes, "1.0");
+        return compressedBytes;
     }
 
     private async Task InitDatabase(string fileName)
@@ -120,7 +122,8 @@
         }
 
         // Write stored DB file and use it
-        await File.WriteAllBytesAsync(fileName, bytes);
+        var decompressedBytes = CompressionHelper.DecompressGZip(bytes);
+        await File.WriteAllBytesAsync(fileName, decompressedBytes);
     }
 
     private async Task ResetDatabase(string fileName)
