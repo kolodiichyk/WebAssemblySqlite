@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAssemblySqlite", "WebAssemblySqlite\WebAssemblySqlite.csproj", "{9393E255-7698-45D7-A9A1-BD2C3019EE69}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9393E255-7698-45D7-A9A1-BD2C3019EE69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9393E255-7698-45D7-A9A1-BD2C3019EE69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9393E255-7698-45D7-A9A1-BD2C3019EE69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9393E255-7698-45D7-A9A1-BD2C3019EE69}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

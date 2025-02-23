@@ -1,0 +1,141 @@
+﻿@page "/"
+@using System.Collections.ObjectModel
+@using Microsoft.EntityFrameworkCore
+@using SoloX.BlazorJsBlob
+@using WebAssemblySqlite.Data
+
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject IndexedDbService IndexedDbService
+@inject IBlobService BlobService
+@inject NotificationService NotificationService
+
+<PageTitle>Sqlite demo</PageTitle>
+
+<h1>Sqlite DEMO</h1>
+
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenButton Click=@(args => ResetDatabase(_dbFileName)) Text="Reset Database" ButtonStyle="ButtonStyle.Primary"/>
+    </RadzenStack>
+
+    <RadzenTabs RenderMode="TabRenderMode.Client" Style="width: 600px;">
+        <Tabs>
+            <RadzenTabsItem Text="Users">
+                <RadzenDataGrid Data="@Users" EmptyText="No data" Density="Density.Compact">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(User.Id)" Title="Id" Width="50px"/>
+                        <RadzenDataGridColumn Property="@nameof(User.Name)" Title="Name" Width="80px"/>
+                        <RadzenDataGridColumn Property="@nameof(User.Email)" Title="Email" Width="100px"/>
+                        <RadzenDataGridColumn Width="30px">
+                            <Template Context="data">
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click=@(() => DeleteEntity(data)) Variant="Variant.Flat" Shade="Shade.Lighter" Icon="delete" class="rz-m-1"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Products">
+                <RadzenDataGrid Data="@Products" EmptyText="No data" Density="Density.Compact" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(Product.Id)" Title="Id" Width="30px"/>
+                        <RadzenDataGridColumn Property="@nameof(Product.Name)" Title="Name" Width="80px"/>
+                        <RadzenDataGridColumn Property="@nameof(Product.Price)" Title="Price" Width="80px"/>
+                        <RadzenDataGridColumn Property="@nameof(Product.Description)" Resizable="true" Title="Description" Width="100px"/>
+                        <RadzenDataGridColumn Property="@nameof(Product.ImageUrl)" Title="Image" Width="40px">
+                            <Template Context="data">
+                                <RadzenImage Path="@data.ImageUrl" Style="width: 40px; height: 40px;" class="rz-border-radius-2" AlternateText="@data.Name" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Width="50px">
+                            <Template Context="data">
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.ExtraSmall" Click=@(() => DeleteEntity(data)) Variant="Variant.Flat" Shade="Shade.Lighter" Icon="delete" class="rz-m-1"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+</RadzenStack>
+
+@code {
+
+    private const string _dbFileName = "app.db";
+
+    public ObservableCollection<User> Users { get; set; } = new ObservableCollection<User>();
+
+    private ObservableCollection<Product> Products = new ObservableCollection<Product>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await InitDatabase(_dbFileName);
+        await GetData();
+    }
+
+    private async Task DeleteEntity<TEntity>(TEntity entity)
+    {
+        if (entity == null)
+            return;
+
+        var db = await DbContextFactory.CreateDbContextAsync();
+        db.Remove(entity);
+        await db.SaveChangesAsync();
+        await db.DisposeAsync();
+        await SaveDatabase(_dbFileName);
+
+        if (entity is User user)
+            Users.Remove(user);
+
+        if (entity is Product product)
+            Products.Remove(product);
+    }
+
+    private  async Task<byte[]> SaveDatabase(string fileName)
+    {
+        await IndexedDbService.InitializeAsync();
+
+        // Save DB file to IndexedDB
+        var bytes = await File.ReadAllBytesAsync(fileName);
+        await IndexedDbService.StoreBytes(fileName, bytes, "1.0");
+        return bytes;
+    }
+
+    private async Task InitDatabase(string fileName)
+    {
+        await IndexedDbService.InitializeAsync();
+
+        var bytes = await IndexedDbService.GetBytes(fileName);
+        if (bytes == null)
+        {
+            File.Create(fileName);
+
+            // First time initialization
+            var db = await DbContextFactory.CreateDbContextAsync();
+            await db.Database.EnsureCreatedAsync();
+
+            bytes = await SaveDatabase(fileName);
+        }
+
+        // Write stored DB file and use it
+        await File.WriteAllBytesAsync(fileName, bytes);
+    }
+
+    private async Task ResetDatabase(string fileName)
+    {
+        await IndexedDbService.InitializeAsync();
+        await IndexedDbService.DeleteFile("app.db");
+        await InitDatabase(fileName);
+
+        await GetData();
+    }
+
+    private async Task GetData()
+    {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        Users = new ObservableCollection<User>(context.Users.ToList());
+        Products = new ObservableCollection<Product>(context.Products.ToList());
+    }
+}

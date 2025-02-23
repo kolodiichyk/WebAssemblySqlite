@@ -1,0 +1,9 @@
+﻿@inherits LayoutComponentBase
+<RadzenComponents />
+
+<HeadContent>
+    <RadzenTheme Theme="software" @rendermode="InteractiveAuto" />
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+</HeadContent>
+
+@Body
