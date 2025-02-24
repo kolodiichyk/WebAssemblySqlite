@@ -1,28 +1,26 @@
 ﻿@page "/"
 @using System.Collections.ObjectModel
 @using Microsoft.EntityFrameworkCore
-@using SoloX.BlazorJsBlob
 @using WebAssemblySqlite.Data
 
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject IndexedDbService IndexedDbService
-@inject IBlobService BlobService
-@inject NotificationService NotificationService
 
 <PageTitle>Sqlite demo</PageTitle>
 
-<h1>Sqlite DEMO</h1>
 
 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
 
+    <RadzenText Style="margin-top: 20px;" TextStyle="TextStyle.H3">Sqlite DEMO</RadzenText>
+
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
-        <RadzenButton Click=@(args => ResetDatabase(_dbFileName)) Text="Reset Database" ButtonStyle="ButtonStyle.Primary"/>
+        <RadzenButton Click="@(_ => ResetDatabase(_dbFileName))" Text="Reset Database" ButtonStyle="ButtonStyle.Primary"/>
     </RadzenStack>
 
-    <RadzenTabs RenderMode="TabRenderMode.Client" Style="width: 600px;">
+    <RadzenTabs RenderMode="TabRenderMode.Client" Style="width: 800px;">
         <Tabs>
             <RadzenTabsItem Text="Users">
-                <RadzenDataGrid Data="@Users" EmptyText="No data" Density="Density.Compact">
+                <RadzenDataGrid Data="@Users" EmptyText="No data" Density="Density.Compact" AllowColumnResize="false">
                     <Columns>
                         <RadzenDataGridColumn Property="@nameof(User.Id)" Title="Id" Width="50px"/>
                         <RadzenDataGridColumn Property="@nameof(User.Name)" Title="Name" Width="80px"/>
@@ -36,7 +34,7 @@
                 </RadzenDataGrid>
             </RadzenTabsItem>
             <RadzenTabsItem Text="Products">
-                <RadzenDataGrid Data="@Products" EmptyText="No data" Density="Density.Compact" AllowColumnResize="true">
+                <RadzenDataGrid Data="@Products" EmptyText="No data" Density="Density.Compact" >
                     <Columns>
                         <RadzenDataGridColumn Property="@nameof(Product.Id)" Title="Id" Width="30px"/>
                         <RadzenDataGridColumn Property="@nameof(Product.Name)" Title="Name" Width="80px"/>
@@ -44,7 +42,7 @@
                         <RadzenDataGridColumn Property="@nameof(Product.Description)" Resizable="true" Title="Description" Width="100px"/>
                         <RadzenDataGridColumn Property="@nameof(Product.ImageUrl)" Title="Image" Width="40px">
                             <Template Context="data">
-                                <RadzenImage Path="@data.ImageUrl" Style="width: 40px; height: 40px;" class="rz-border-radius-2" AlternateText="@data.Name" />
+                                <RadzenImage Path="@data.ImageUrl" Style="width: 40px; height: 40px;" class="rz-gravatar" AlternateText="@data.Name" />
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Width="50px">
@@ -63,9 +61,9 @@
 
     private const string _dbFileName = "app.db";
 
-    public ObservableCollection<User> Users { get; set; } = new ObservableCollection<User>();
+    private ObservableCollection<User> Users { get; set; } = new ();
 
-    private ObservableCollection<Product> Products = new ObservableCollection<Product>();
+    private ObservableCollection<Product> Products { get; set; } = new ();
 
     protected override async Task OnInitializedAsync()
     {
